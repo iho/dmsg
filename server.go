@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -269,12 +270,17 @@ type Server struct {
 
 	lisDone  int32
 	doneOnce sync.Once
+	devMode  bool
 }
 
 // NewServer creates a new dmsg_server.
-func NewServer(pk cipher.PubKey, sk cipher.SecKey, addr string, l net.Listener, dc disc.APIClient) (*Server, error) {
+func NewServer(pk cipher.PubKey, sk cipher.SecKey, addr string, l net.Listener, dc disc.APIClient, devMode bool) (*Server, error) {
 	if addr == "" {
 		addr = l.Addr().String()
+	}
+
+	if !devMode && (strings.Contains(addr, "127.0.0.1") && strings.Contains(addr, "localhost")) {
+		return nil, errors.New("advertising localhost listening address is not allowed in production mode")
 	}
 
 	if _, ok := l.(*noise.Listener); ok {
@@ -282,13 +288,14 @@ func NewServer(pk cipher.PubKey, sk cipher.SecKey, addr string, l net.Listener, 
 	}
 
 	return &Server{
-		log:   logging.MustGetLogger("dmsg_server"),
-		pk:    pk,
-		sk:    sk,
-		addr:  addr,
-		lis:   noise.WrapListener(l, pk, sk, false, noise.HandshakeXK),
-		dc:    dc,
-		conns: make(map[cipher.PubKey]*ServerConn),
+		log:     logging.MustGetLogger("dmsg_server"),
+		pk:      pk,
+		sk:      sk,
+		addr:    addr,
+		lis:     noise.WrapListener(l, pk, sk, false, noise.HandshakeXK),
+		dc:      dc,
+		conns:   make(map[cipher.PubKey]*ServerConn),
+		devMode: devMode,
 	}, nil
 }
 
@@ -421,6 +428,11 @@ func (s *Server) updateDiscEntry(ctx context.Context) error {
 }
 
 func (s *Server) retryUpdateEntry(ctx context.Context, timeout time.Duration) error {
+	addr := s.Addr()
+	if !s.devMode && strings.Contains(addr, "127.0.0.1") {
+		return errors.New("address is not correct")
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 

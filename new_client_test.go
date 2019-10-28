@@ -31,7 +31,7 @@ func TestNewClient(t *testing.T) {
 	l, err := net.Listen("tcp", sAddr)
 	require.NoError(t, err)
 
-	srv, err := NewServer(srvPK, srvSK, "", l, dc)
+	srv, err := NewServer(srvPK, srvSK, "", l, dc, true)
 	require.NoError(t, err)
 
 	serveErr := make(chan error, 1)

@@ -4,11 +4,10 @@ import (
 	"context"
 	"log"
 
-	"golang.org/x/net/nettest"
-
 	"github.com/SkycoinProject/dmsg"
 	"github.com/SkycoinProject/dmsg/cipher"
 	"github.com/SkycoinProject/dmsg/disc"
+	"golang.org/x/net/nettest"
 )
 
 func main() {
@@ -138,10 +137,18 @@ func createDmsgSrv(dc disc.APIClient) (*dmsg.Server, error) {
 		return nil, err
 	}
 	l, err := nettest.NewLocalListener("tcp")
+	addr := ""
+	devMode := true
+
+	// Example of configuration for production mode
+	// l, err := net.Listen("tcp", "0.0.0.0:9999")
+	// devMode := False
+	//  addr = "<your public IP address>:9999"
+
 	if err != nil {
 		return nil, err
 	}
-	srv, err := dmsg.NewServer(pk, sk, "", l, dc)
+	srv, err := dmsg.NewServer(pk, sk, addr, l, dc, devMode)
 	if err != nil {
 		return nil, err
 	}
