@@ -176,13 +176,13 @@ func TestNewServer(t *testing.T) {
 	// An error should be returned.
 	t.Run("Already wrapped listener fails", func(t *testing.T) {
 		wrappedL := noise.WrapListener(l, srvPK, srvSK, false, noise.HandshakeXK)
-		s, err := NewServer(srvPK, srvSK, "", wrappedL, dc, true)
+		s, err := NewServer(srvPK, srvSK, "", wrappedL, dc)
 		assert.Equal(t, ErrListenerAlreadyWrappedToNoise, err)
 		assert.Nil(t, s)
 	})
 
 	t.Run("should_start_and_stop_okay", func(t *testing.T) {
-		s, err := NewServer(srvPK, srvSK, "", l, dc, true)
+		s, err := NewServer(srvPK, srvSK, "", l, dc)
 		require.NoError(t, err)
 
 		var serveErr error
@@ -758,7 +758,7 @@ func testServerReconnection(t *testing.T, randomAddr bool) {
 	l, err := net.Listen("tcp", serverAddr)
 	require.NoError(t, err)
 
-	srv, err = NewServer(srv.pk, srv.sk, addr, l, dc, true)
+	srv, err = NewServer(srv.pk, srv.sk, addr, l, dc)
 	require.NoError(t, err)
 
 	errCh := make(chan error, 1)
@@ -792,7 +792,7 @@ func createServer(dc disc.APIClient) (srv *Server, srvErr <-chan error, err erro
 		return nil, nil, err
 	}
 
-	srv, err = NewServer(pk, sk, "", l, dc, true)
+	srv, err = NewServer(pk, sk, "", l, dc)
 	if err != nil {
 		return nil, nil, err
 	}
