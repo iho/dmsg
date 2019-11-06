@@ -9,8 +9,10 @@ import (
 	"sync"
 
 	"github.com/SkycoinProject/skycoin/src/util/logging"
+	"golang.org/x/net/nettest"
 
 	"github.com/SkycoinProject/dmsg/cipher"
+	"github.com/SkycoinProject/dmsg/disc"
 	"github.com/SkycoinProject/dmsg/ioutil"
 )
 
@@ -344,7 +346,7 @@ func (tp *Transport) Serve() {
 			case RequestType:
 				log.Warnln("Rejected [REQUEST]: ID already occupied, possibly malicious server.")
 				if err := tp.Conn.Close(); err != nil {
-					log.WithError(err).Warn("Failed to close connection")
+					log.WithField("reason", err).Debug("Connection closed")
 				}
 				return
 
@@ -410,4 +412,26 @@ func (tp *Transport) Write(p []byte) (int, error) {
 		return 0, err
 	}
 	return len(p), nil
+}
+
+// CreateDmsgTestServer creates a new dmsg test server.
+func CreateDmsgTestServer(dc disc.APIClient) (*Server, error) {
+	pk, sk, err := cipher.GenerateDeterministicKeyPair([]byte("s"))
+	if err != nil {
+		return nil, err
+	}
+
+	l, err := nettest.NewLocalListener("tcp")
+	if err != nil {
+		return nil, err
+	}
+
+	srv, err := NewServer(pk, sk, "", l, dc)
+	if err != nil {
+		return nil, err
+	}
+
+	go func() { _ = srv.Serve() }() //nolint:errcheck
+
+	return srv, nil
 }
