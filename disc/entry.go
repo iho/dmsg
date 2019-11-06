@@ -39,7 +39,7 @@ var (
 	ErrValidationWrongSequence = NewEntryValidationError("sequence field of new entry is not sequence of old entry + 1")
 	// ErrValidationWrongTime occurs in case when previous entry timestamp is not set before current entry timestamp
 	ErrValidationWrongTime = NewEntryValidationError("previous entry timestamp is not set before current entry timestamp")
-	// ErrValidationWrongTime occurs in case when client want to advertise wrong Server address
+	// ErrValidationServerAddress occurs in case when client want to advertise wrong Server address
 	ErrValidationServerAddress = NewEntryValidationError("advertising localhost listening address is not allowed in production mode")
 
 	errReverseMap = map[string]error{
